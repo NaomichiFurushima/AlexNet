@@ -11,7 +11,7 @@ from keras.initializers import TruncatedNormal, Constant
 from keras.models import Sequential
 from keras.optimizers import SGD
 from keras.layers import Input, Dropout, Flatten, Conv2D, MaxPooling2D, Dense, Activation, BatchNormalization
-from keras.callbacks import Callback, EarlyStopping
+from keras.callbacks import Callback, EarlyStopping, TensorBoard, CSVLogger
 from keras.utils.np_utils import to_categorical
 
 np.random.seed(1224)
@@ -54,6 +54,7 @@ if not os.path.exists(TEST_CACHE_DIR):
     os.mkdir(TEST_CACHE_DIR)
 
 sys.stdout.write('loading...')
+sys.stdout.flush()
 
 train = []
 test = []
@@ -80,7 +81,7 @@ if FORCE_CONVERT or len(train) < 25000:
     train_files = ls(TRAIN_CACHE_DIR)
     print('Done')
 
-if FORCE_CONVERT or len(test) < 25000:
+if FORCE_CONVERT or len(test) < 12500:
     sys.stdout.write('Process test data...')
     sys.stdout.flush()
     for i in os.listdir(TEST_DIR):
@@ -162,6 +163,10 @@ def AlexNet():
 model = AlexNet()
 model.summary()
 
+tensorBoard = TensorBoard(log_dir = 'log', histogram_freq=1, write_graph=True, write_grads=False)
 early_stopping = EarlyStopping(monitor='val_loss', patience=3, verbose=1, mode='auto')
+csvlogger = CSVLogger('log/epoch_log.csv')
 
-history = model.fit(train, labels, epochs=15, batch_size=128, shuffle=True, validation_split=0.25, callbacks=[early_stopping])
+history = model.fit(train, labels, epochs=2, batch_size=128, shuffle=True, validation_split=0.25, callbacks=[early_stopping, tensorBoard, csvlogger])
+
+#predictions = model.predict(test, verbose=0)
